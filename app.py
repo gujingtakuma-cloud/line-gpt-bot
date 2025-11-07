@@ -1,12 +1,16 @@
-import google.generativeai as genai
+import os
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
-import os
+import google.generativeai as genai
 
+# LINE のチャネル情報
+line_bot_api = LineBotApi(os.getenv("LINE_CHANNEL_ACCESS_TOKEN"))
+handler = WebhookHandler(os.getenv("LINE_CHANNEL_SECRET"))
+
+# Gemini API 設定
 genai.configure(api_key=os.getenv("OPENAI_API_KEY"))
-
 model = genai.GenerativeModel("gemini-1.5-flash")
 
 app = Flask(__name__)
@@ -26,13 +30,15 @@ def callback():
 def handle_message(event):
     user_text = event.message.text
 
+    # Gemini で返信生成
     response = model.generate_content(user_text)
     reply_text = response.text
 
+    # LINE に返信
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=reply_text)
     )
 
 if __name__ == "__main__":
-    app.run(port=5000)
+    app.run(port=int(os.environ.get("PORT", 5000)))
