@@ -1,4 +1,4 @@
-flask
-python-dotenv
-line-bot-sdk==3.21.0
-openai
+flask==2.3.3
+python-dotenv==1.0.0
+line-bot-sdk==2.4.3
+openai==0.27.10
