@@ -21,7 +21,6 @@ handler = WebhookHandler(LINE_CHANNEL_SECRET)
 client = genai.Client(api_key=GEMINI_API_KEY)
 MODEL = "models/gemini-2.5-flash"
 
-# --- 状態管理（リッチメニューの HELP → 次の質問だけ受け付ける） ---
 user_state = {}  # {user_id: "waiting_question"}
 
 
