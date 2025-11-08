@@ -3,8 +3,8 @@ from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
-from google import genai
 from dotenv import load_dotenv
+from google import genai
 
 load_dotenv()
 
@@ -17,9 +17,10 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
-# Gemini API クライアント
 client = genai.Client(api_key=GEMINI_API_KEY)
 
+# --- A モードの一時フラグ管理（メモリ保存） ---
+session = {}
 
 @app.route("/callback", methods=['POST'])
 def callback():
@@ -31,54 +32,42 @@ def callback():
     except InvalidSignatureError:
         abort(400)
 
-    return 'OK'
+    return "OK"
 
-
-@handler.add(MessageEvent, message=TextMessage)
-def handle_message(event):
-    user_text = event.message.text
-
-    try:
-        response = client.models.generate_content(
-            model="gemini-2.0-flash",
-            contents=user_text
-        )
-        reply_text = response.text if response.text else "返答が取得できませんでした。"
-    except Exception as e:
-        print("Gemini API error:", e)
-        reply_text = "エラーが発生しました。しばらくしてからもう一度お試しください。"
-
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply_text)
-    )
-
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
-
-session = {}
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_id = event.source.user_id
-    user_text = event.message.text
+    user_text = event.message.text.strip()
 
-    # モード開始
-    if user_text == "AIに相談":
-        session[user_id] = "use_help"
-        reply = "質問をどうぞ。"
+    # --- Step1: モード開始 ---
+    if user_text == "使い方モード":
+        session[user_id] = "awaiting_question"
+        reply = "使い方相談モードです。聞きたいことを1つ送ってください。"
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
         return
 
-    # 回答
-    if session.get(user_id) == "use_help":
-        # AIに渡す
-        ...
-        reply_text = "（AIの回答）"
+    # --- Step2: 次の1つだけ質問を受け付ける ---
+    if session.get(user_id) == "awaiting_question":
+        session[user_id] = None  # 一度で終了させる
+
+        try:
+            ai_res = client.models.generate_content(
+                model="gemini-1.5-flash",
+                contents=user_text
+            )
+            reply_text = ai_res.text or "すみません、応答が取得できませんでした。"
+        except Exception as e:
+            reply_text = "AI応答エラー: " + str(e)
+
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
-        # 解除
-        session[user_id] = None
         return
 
+    # --- 通常モードの雑談 ---
+    ai_res = client.models.generate_content(
+        model="gemini-1.5-flash",
+        contents=user_text
+    )
+    reply_text = ai_res.text or "応答を生成できませんでした。"
+
+    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
