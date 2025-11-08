@@ -18,8 +18,10 @@ line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
 client = genai.Client(api_key=GEMINI_API_KEY)
+MODEL = "models/gemini-2.0-flash"
 
-MODEL = "models/gemini-2.0-flash"   # ここが重要！確実に動くモデル
+user_mode = {}  # {user_id: True/False}
+
 
 @app.route("/callback", methods=["POST"])
 def callback():
@@ -36,22 +38,36 @@ def callback():
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    user_text = event.message.text
+    user_id = event.source.user_id
+    user_text = event.message.text.strip()
 
-    # Gemini で応答生成
-    try:
-        response = client.models.generate_content(
-            model=MODEL,
-            contents=user_text
+    if user_text == "AIに相談":
+        user_mode[user_id] = True
+        reply = "何か聞きたいことはありますか。"
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
+        return
+    if user_mode.get(user_id, False):
+
+        try:
+            response = client.models.generate_content(
+                model=MODEL,
+                contents=user_text
+            )
+            ai_reply = response.text or "（空の応答でした）"
+        except Exception as e:
+            ai_reply = f"AI応答エラー: {str(e)}"
+
+        # 回答を返す
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=ai_reply)
         )
-        reply_text = response.text or "（空の応答でした）"
-    except Exception as e:
-        reply_text = f"AI応答エラー: {str(e)}"
 
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply_text)
-    )
+        user_mode[user_id] = False
+        return
+
+    default_reply = "AI質問をするにはリッチメニューのボタンを押してください。"
+    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=default_reply))
 
 
 if __name__ == "__main__":
