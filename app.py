@@ -45,7 +45,6 @@ def handle_message(event):
         user_mode[user_id] = True
         reply = "何か聞きたいことはありますか。"
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
-        return
         if user_mode.get(user_id, False):
             try:
                 response = client.models.generate_content(
