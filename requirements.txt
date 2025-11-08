@@ -1,4 +1,4 @@
-google‑genai
+google-genai
 flask
 python-dotenv
 line-bot-sdk
