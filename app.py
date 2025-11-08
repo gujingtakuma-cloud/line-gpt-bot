@@ -72,14 +72,12 @@ def handle_message(event):
            ai_reply = response.text or "（空の応答でした）"
        except Exception as e:
            ai_reply = f"AI応答エラー: {str(e)}"
-
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=ai_reply)
-    )
-
-    user_mode[user_id] = False
-    return
+           line_bot_api.reply_message(
+               event.reply_token,
+               TextSendMessage(text=ai_reply)
+           )
+           user_mode[user_id] = False
+           return
 
 
 if __name__ == "__main__":
