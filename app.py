@@ -61,7 +61,7 @@ def handle_message(event):
     print(f"User state: {user_state.get(user_id)}")
 
     # HELP
-    if text.lower() == "AIに相談":
+    if text == "AIに相談":
         user_state[user_id] = "waiting_question"
         reply_text = "何か聞きたいことはありますか。"
         print(f"Reply: {reply_text}")
