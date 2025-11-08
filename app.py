@@ -3,8 +3,8 @@ from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
-from dotenv import load_dotenv
 from google import genai
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -19,58 +19,41 @@ handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-print("=== AVAILABLE GEMINI MODELS ===")
-try:
-    pager = client.models.list()
-    for model in pager:     # ← Pager を直接 for で回す
-        print(model.name)
-except Exception as e:
-    print("MODEL LIST ERROR:", e)
-print("=== END MODEL LIST ===")
+MODEL = "models/gemini-2.0-flash"   # ここが重要！確実に動くモデル
 
-session = {}
-
-@app.route("/callback", methods=['POST'])
+@app.route("/callback", methods=["POST"])
 def callback():
-    signature = request.headers.get('X-Line-Signature')
+    signature = request.headers.get("X-Line-Signature")
     body = request.get_data(as_text=True)
 
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
         abort(400)
+
     return "OK"
 
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
-    user_id = event.source.user_id
-    user_text = event.message.text.strip()
+    user_text = event.message.text
 
-    if user_text == "使い方モード":
-        session[user_id] = "awaiting_question"
-        reply = "使い方相談モードです。質問を1つ送ってください。"
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
-        return
+    # Gemini で応答生成
+    try:
+        response = client.models.generate_content(
+            model=MODEL,
+            contents=user_text
+        )
+        reply_text = response.text or "（空の応答でした）"
+    except Exception as e:
+        reply_text = f"AI応答エラー: {str(e)}"
 
-    if session.get(user_id) == "awaiting_question":
-        session[user_id] = None
-        try:
-            ai_res = client.models.generate_content(
-                model="models/gemini-pro",
-                contents=user_text
-            )
-            reply_text = ai_res.text or "応答を取得できませんでした。"
-        except Exception as e:
-            reply_text = "AI応答エラー: " + str(e)
-
-        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
-        return
-
-    ai_res = client.models.generate_content(
-        model="models/gemini-pro",
-        contents=user_text
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=reply_text)
     )
-    reply_text = ai_res.text or "応答できませんでした。"
 
-    line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port)
