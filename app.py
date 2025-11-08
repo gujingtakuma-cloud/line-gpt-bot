@@ -1,11 +1,3 @@
-print("=== AVAILABLE GEMINI MODELS ===")
-try:
-    for m in client.models.list().models:
-        print(m.name)
-except Exception as e:
-    print("MODEL LIST ERROR:", e)
-print("=== END MODEL LIST ===")
-
 import os
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
@@ -26,6 +18,14 @@ line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
 client = genai.Client(api_key=GEMINI_API_KEY)
+
+print("=== AVAILABLE GEMINI MODELS ===")
+try:
+    for m in client.models.list().models:
+        print(m.name)
+except Exception as e:
+    print("MODEL LIST ERROR:", e)
+print("=== END MODEL LIST ===")
 
 session = {}
 
