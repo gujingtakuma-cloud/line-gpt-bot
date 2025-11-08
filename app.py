@@ -18,16 +18,14 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
-# Gemini Client 初期化
 client = genai.Client(api_key=GEMINI_API_KEY)
 
 async def generate_gemini_text(prompt: str) -> str:
-    # 最新 SDK の generate_text を使用
-    response = await client.generate_text(
+    response = await client.generate_content(
         model="text-bison-001",
-        input=prompt,
-        max_output_tokens=500
+        prompt=prompt
     )
+    # 最新 SDK では出力は response.output ではなく response.output_text
     return response.output_text
 
 @app.route("/callback", methods=["POST"])
