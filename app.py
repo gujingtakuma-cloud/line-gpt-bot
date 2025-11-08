@@ -66,7 +66,6 @@ def handle_message(event):
         user_mode[user_id] = False
         return
 
-    default_reply = "AI質問をするにはリッチメニューのボタンを押してください。"
     line_bot_api.reply_message(event.reply_token, TextSendMessage(text=default_reply))
 
 
