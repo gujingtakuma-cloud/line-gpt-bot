@@ -21,8 +21,9 @@ client = genai.Client(api_key=GEMINI_API_KEY)
 
 print("=== AVAILABLE GEMINI MODELS ===")
 try:
-    for m in client.models.list().models:
-        print(m.name)
+    pager = client.models.list()
+    for model in pager:     # ← Pager を直接 for で回す
+        print(model.name)
 except Exception as e:
     print("MODEL LIST ERROR:", e)
 print("=== END MODEL LIST ===")
