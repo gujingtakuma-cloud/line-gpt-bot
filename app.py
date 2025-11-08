@@ -4,6 +4,7 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from google import genai
+from google.genai import types  # 型定義用
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -17,16 +18,8 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
-# 最新 SDK の Client
+# ① クライアントの初期化（APIキー方式）
 client = genai.Client(api_key=GEMINI_API_KEY)
-
-def generate_gemini_text(prompt: str) -> str:
-    response = client.generate(
-        model="gemini-1.5-t",
-        prompt=prompt,
-        max_output_tokens=256
-    )
-    return response.output[0].content[0].text
 
 @app.route("/callback", methods=["POST"])
 def callback():
@@ -42,10 +35,18 @@ def callback():
 def handle_message(event):
     user_text = event.message.text
     try:
-        reply_text = generate_gemini_text(user_text)
+        # ② モデル呼び出し
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",             # モデル名は利用可能なものに変更
+            contents=user_text,                  # プロンプトとして送る
+            config=types.GenerateContentConfig(
+                max_output_tokens=300             # 必要に応じてトークン制限
+            )
+        )
+        reply_text = response.text
     except Exception as e:
-        print(f"Error: {e}")
-        reply_text = "すみません、今は応答できません。"
+        print("Gemini API error:", e)
+        reply_text = "申し訳ありません。現在サービスを利用できません。"
 
     line_bot_api.reply_message(
         event.reply_token,
