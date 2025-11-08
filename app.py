@@ -58,34 +58,26 @@ def handle_message(event):
             event.reply_token,
             TextSendMessage("何か聞きたいことはありますか。")
         )
-        return
-
-    if user_state.get(user_id) == "waiting_question":
-
-        rule = (
-            "あなたはLINEの使い方に限定して回答するAIです。"
-            "LINEに関係ない質問には「このAIはLINEの使い方に関する質問のみ受け付けています。」と答えてください。\n\n"
-        )
-
-        prompt = rule + f"ユーザーの質問: {text}"
-
-        try:
-            result = client.models.generate_content(
-                model=MODEL,
-                contents=[prompt]
+        if user_state.get(user_id) == "waiting_question":
+            rule = (
+                "あなたはLINEの使い方に限定して回答するAIです。"
+                "LINEに関係ない質問には「このAIはLINEの使い方に関する質問のみ受け付けています。」と答えてください。\n\n"
             )
-            reply = result.text if result.text else "回答を取得できませんでした。"
-
-        except Exception as e:
-            reply = f"AI応答エラー: {str(e)}"
-
-        user_state.pop(user_id, None)
-
-        line_bot_api.reply_message(
-            event.reply_token,
-            TextSendMessage(text=reply)
-        )
-        return
+            prompt = rule + f"ユーザーの質問: {text}"
+            try:
+                result = client.models.generate_content(
+                    model=MODEL,
+                    contents=[prompt]
+                )
+                reply = result.text if result.text else "回答を取得できませんでした。"
+            except Exception as e:
+                reply = f"AI応答エラー: {str(e)}"
+                user_state.pop(user_id, None)
+                line_bot_api.reply_message(
+                    event.reply_token,
+                    TextSendMessage(text=reply)
+                )
+                return
 
 
 
