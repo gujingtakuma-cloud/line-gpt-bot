@@ -4,7 +4,6 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from google import genai
-from google.genai import types  # 型定義用
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -18,38 +17,41 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
-# ① クライアントの初期化（APIキー方式）
+# Gemini API クライアント
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-@app.route("/callback", methods=["POST"])
+
+@app.route("/callback", methods=['POST'])
 def callback():
-    signature = request.headers.get("X-Line-Signature")
+    signature = request.headers.get('X-Line-Signature')
     body = request.get_data(as_text=True)
+
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
         abort(400)
-    return "OK"
+
+    return 'OK'
+
 
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_text = event.message.text
-   try:
-       response = client.models.generate_content(
-           model="gemini-2.5-flash",
-           contents=user_text,
-           config=types.GenerateContentConfig(max_output_tokens=300)
-       )
-    # 空文字対策
-reply_text = response.text if response.text else "ごめんなさい、返答できませんでした。"
+
+    try:
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=user_text
+        )
+        reply_text = response.text if response.text else "返答が取得できませんでした。"
     except Exception as e:
         print("Gemini API error:", e)
-        reply_text = "申し訳ありません。現在サービスを利用できません。"
+        reply_text = "エラーが発生しました。しばらくしてからもう一度お試しください。"
 
-line_bot_api.reply_message(
-    event.reply_token,
-    TextSendMessage(text=reply_text)
-)
+    line_bot_api.reply_message(
+        event.reply_token,
+        TextSendMessage(text=reply_text)
+    )
 
 
 if __name__ == "__main__":
