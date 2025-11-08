@@ -3,10 +3,7 @@ from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
-from google import genai  # Gemini
-# load .env もし必要なら
-# from dotenv import load_dotenv
-# load_dotenv()
+from google import genai
 
 app = Flask(__name__)
 
@@ -36,14 +33,14 @@ def callback():
 def handle_message(event):
     user_text = event.message.text
 
-    # Gemini generate_content は kwargs が違う
-    response = client.generate_text(
-        model="models/text-bison-001",  # Geminiの推奨モデル
+    # Gemini最新クライアントに対応
+    response = client.Models.generate_content(
+        model="models/text-bison-001",
         prompt=user_text,
         max_output_tokens=500
     )
 
-    reply_text = response.text  # Gemini は .text で取得
+    reply_text = response.result[0].content
     line_bot_api.reply_message(
         event.reply_token,
         TextSendMessage(text=reply_text)
