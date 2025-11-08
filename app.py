@@ -18,15 +18,16 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
 
+# Clientの作成
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-async def generate_gemini_text(prompt: str) -> str:
-    response = await client.generate_content(
-        model="text-bison-001",
-        prompt=prompt
+async def generate_gemini_chat(prompt: str) -> str:
+    # 最新の方法は chat.completions.create です
+    response = await client.chat.completions.create(
+        model="gemini-1.5-t",
+        messages=[{"role": "user", "content": prompt}]
     )
-    # 最新 SDK では出力は response.output ではなく response.output_text
-    return response.output_text
+    return response.choices[0].message.content
 
 @app.route("/callback", methods=["POST"])
 def callback():
@@ -42,7 +43,7 @@ def callback():
 def handle_message(event):
     user_text = event.message.text
     try:
-        reply_text = asyncio.run(generate_gemini_text(user_text))
+        reply_text = asyncio.run(generate_gemini_chat(user_text))
     except Exception as e:
         print(f"Error: {e}")
         reply_text = "すみません、今は応答できません。"
