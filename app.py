@@ -7,30 +7,28 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from google import genai
 from dotenv import load_dotenv
 
-# 環境変数ロード
 load_dotenv()
 
 app = Flask(__name__)
 
-# LINE と Gemini API キー
 LINE_CHANNEL_SECRET = os.getenv("LINE_CHANNEL_SECRET")
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 line_bot_api = LineBotApi(LINE_CHANNEL_ACCESS_TOKEN)
 handler = WebhookHandler(LINE_CHANNEL_SECRET)
+
+# Gemini Client 初期化
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-# 非同期で Gemini に問い合わせ
 async def generate_gemini_text(prompt: str) -> str:
-    response = await client.Models.generate_content(
-        model="models/text-bison-001",
-        prompt=prompt,
-        max_output_tokens=500,
-        timeout=10  # タイムアウト秒
+    # 最新 SDK の generate_text を使用
+    response = await client.generate_text(
+        model="text-bison-001",
+        input=prompt,
+        max_output_tokens=500
     )
-    # Gemini の応答取得
-    return response.result[0].content
+    return response.output_text
 
 @app.route("/callback", methods=["POST"])
 def callback():
@@ -46,7 +44,6 @@ def callback():
 def handle_message(event):
     user_text = event.message.text
     try:
-        # 非同期呼び出しを同期で待つ
         reply_text = asyncio.run(generate_gemini_text(user_text))
     except Exception as e:
         print(f"Error: {e}")
