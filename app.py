@@ -34,24 +34,23 @@ def callback():
 @handler.add(MessageEvent, message=TextMessage)
 def handle_message(event):
     user_text = event.message.text
-    try:
-        # ② モデル呼び出し
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",             # モデル名は利用可能なものに変更
-            contents=user_text,                  # プロンプトとして送る
-            config=types.GenerateContentConfig(
-                max_output_tokens=300             # 必要に応じてトークン制限
-            )
-        )
-        reply_text = response.text
+   try:
+       response = client.models.generate_content(
+           model="gemini-2.5-flash",
+           contents=user_text,
+           config=types.GenerateContentConfig(max_output_tokens=300)
+       )
+    # 空文字対策
+reply_text = response.text if response.text else "ごめんなさい、返答できませんでした。"
     except Exception as e:
         print("Gemini API error:", e)
         reply_text = "申し訳ありません。現在サービスを利用できません。"
 
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply_text)
-    )
+line_bot_api.reply_message(
+    event.reply_token,
+    TextSendMessage(text=reply_text)
+)
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
