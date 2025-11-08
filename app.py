@@ -1,3 +1,11 @@
+print("=== AVAILABLE GEMINI MODELS ===")
+try:
+    for m in client.models.list().models:
+        print(m.name)
+except Exception as e:
+    print("MODEL LIST ERROR:", e)
+print("=== END MODEL LIST ===")
+
 import os
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
