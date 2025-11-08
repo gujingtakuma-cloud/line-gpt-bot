@@ -66,19 +66,19 @@ def handle_message(event):
     user_text = event.message.text
 
     # モード開始
-    if user_text == "使い方モード":
+    if user_text == "AIに相談":
         session[user_id] = "use_help"
-        reply = "使い方相談モードです。質問をどうぞ。"
+        reply = "質問をどうぞ。"
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
         return
 
-    # モード中の回答
+    # 回答
     if session.get(user_id) == "use_help":
         # AIに渡す
         ...
         reply_text = "（AIの回答）"
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
-        # モード解除
+        # 解除
         session[user_id] = None
         return
 
