@@ -57,3 +57,28 @@ def handle_message(event):
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
+session = {}
+
+@handler.add(MessageEvent, message=TextMessage)
+def handle_message(event):
+    user_id = event.source.user_id
+    user_text = event.message.text
+
+    # モード開始
+    if user_text == "使い方モード":
+        session[user_id] = "use_help"
+        reply = "使い方相談モードです。質問をどうぞ。"
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
+        return
+
+    # モード中の回答
+    if session.get(user_id) == "use_help":
+        # AIに渡す
+        ...
+        reply_text = "（AIの回答）"
+        line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply_text))
+        # モード解除
+        session[user_id] = None
+        return
+
