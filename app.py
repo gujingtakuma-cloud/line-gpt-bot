@@ -46,38 +46,38 @@ def handle_message(event):
         reply = "何か聞きたいことはありますか。"
         line_bot_api.reply_message(event.reply_token, TextSendMessage(text=reply))
         return
-   if user_mode.get(user_id, False):
-       try:
-           response = client.models.generate_content(
-               model=MODEL,
-               contents=[
-                   {
-                       "role": "system",
-                       "parts": [
-                           {
-                               "text": (
-                                   "あなたは LINE の使い方に関する質問にのみ答えるアシスタントです。"
-                                   "LINEアプリ、LINE公式アカウント、リッチメニュー、設定操作などについてのみ回答してください。"
-                                   "それ以外の質問が来た場合は『このAIはLINEの使い方に関する質問のみ受け付けています』と返答してください。"
-                               )
-                           }
-                       ]
-                   },
-                   {
-                       "role": "user",
-                       "parts": [{"text": user_text}]
-                   }
-               ]
-           )
-           ai_reply = response.text or "（空の応答でした）"
-       except Exception as e:
-           ai_reply = f"AI応答エラー: {str(e)}"
-           line_bot_api.reply_message(
-               event.reply_token,
-               TextSendMessage(text=ai_reply)
-           )
-           user_mode[user_id] = False
-           return
+        if user_mode.get(user_id, False):
+            try:
+                response = client.models.generate_content(
+                    model=MODEL,
+                    contents=[
+                        {
+                            "role": "system",
+                            "parts": [
+                                {
+                                    "text": (
+                                        "あなたは LINE の使い方に関する質問にのみ答えるアシスタントです。"
+                                        "LINEアプリ、LINE公式アカウント、リッチメニュー、設定操作などについてのみ回答してください。"
+                                        "それ以外の質問が来た場合は『このAIはLINEの使い方に関する質問のみ受け付けています』と返答してください。"
+                                    )
+                                }
+                            ]
+                        },
+                        {
+                            "role": "user",
+                            "parts": [{"text": user_text}]
+                        }
+                    ]
+                )
+                ai_reply = response.text or "（空の応答でした）"
+            except Exception as e:
+                ai_reply = f"AI応答エラー: {str(e)}"
+                line_bot_api.reply_message(
+                    event.reply_token,
+                    TextSendMessage(text=ai_reply)
+                )
+                user_mode[user_id] = False
+                return
 
 
 if __name__ == "__main__":
