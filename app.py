@@ -41,43 +41,70 @@ def callback():
 @handler.add(MessageEvent)
 def handle_message(event):
 
+    print("=== EVENT RECEIVED ===")
+    print(event)
+    print("======================")
+
     if not isinstance(event.message, TextMessage):
+        print("Non-text message received")
         line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage(text="テキストを送信してください。")
+            TextSendMessage(text="テキストを送ってください。")
         )
         return
 
     user_id = event.source.user_id
     text = (event.message.text or "").strip()
 
-    # --- リッチメニュー HELP ---
-    if text.lower() == "AIに相談":
+    print(f"User ID: {user_id}")
+    print(f"Received text: '{text}'")
+    print(f"User state: {user_state.get(user_id)}")
+
+    # HELP
+    if text.lower() == "help":
         user_state[user_id] = "waiting_question"
+        reply_text = "LINEの使い方について質問できます。質問をどうぞ。（1回のみ）"
+        print(f"Reply: {reply_text}")
+
         line_bot_api.reply_message(
             event.reply_token,
-            TextSendMessage("何か聞きたいことはありますか。")
+            TextSendMessage(text=reply_text)
         )
-        if user_state.get(user_id) == "waiting_question":
-            rule = (
-                "あなたはLINEの使い方に限定して回答するAIです。"
-                "LINEに関係ない質問には「このAIはLINEの使い方に関する質問のみ受け付けています。」と答えてください。\n\n"
+        return
+
+    # waiting_question
+    if user_state.get(user_id) == "waiting_question":
+
+        prompt = (
+            "あなたはLINEの使い方に限定して回答する AI です。\n"
+            "LINEに関係ない質問には次のように答えてください：\n"
+            "「このAIはLINEの使い方に関する質問のみ受け付けています。」\n\n"
+            f"ユーザーの質問: {text}"
+        )
+
+        try:
+            print("Sending to Gemini...")
+            result = client.models.generate_content(
+                model="models/gemini-2.5-flash",
+                contents=[prompt]
             )
-            prompt = rule + f"ユーザーの質問: {text}"
-            try:
-                result = client.models.generate_content(
-                    model=MODEL,
-                    contents=[prompt]
-                )
-                reply = result.text if result.text else "回答を取得できませんでした。"
-            except Exception as e:
-                reply = f"AI応答エラー: {str(e)}"
-                user_state.pop(user_id, None)
-                line_bot_api.reply_message(
-                    event.reply_token,
-                    TextSendMessage(text=reply)
-                )
-                return
+            ai_reply = result.text or "回答を取得できませんでした。"
+
+        except Exception as e:
+            ai_reply = f"AI応答エラー: {str(e)}"
+
+        print(f"AI Reply: '{ai_reply}'")
+
+        user_state.pop(user_id, None)
+
+        if not ai_reply.strip():
+            ai_reply = "回答が空でした。もう一度お試しください。"
+
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=ai_reply)
+        )
+        return
 
 
 
