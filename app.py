@@ -60,50 +60,50 @@ def handle_message(event):
     print(f"Received text: '{text}'")
     print(f"User state: {user_state.get(user_id)}")
 
-# HELP
-if text == "AIに相談":
-    user_state[user_id] = {"mode": "waiting", "count": 2}
-    reply_text = "何か聞きたいことはありますか。"
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=reply_text)
-    )
-    return
-
-
-# waiting_question
-state = user_state.get(user_id)
-if state and state.get("mode") == "waiting":
-
-    prompt = (
-        "あなたはLINEの使い方に限定して回答する AI です。\n"
-        "LINEに関係ない質問には次のように答えてください：\n"
-        "「このAIはLINEの使い方に関する質問のみ受け付けています。」\n\n"
-        f"ユーザーの質問: {text}"
-    )
-
-    try:
-        result = client.models.generate_content(
-            model=MODEL,
-            contents=[prompt]
+    # HELP
+    if text == "AIに相談":
+        user_state[user_id] = {"mode": "waiting", "count": 2}
+        reply_text = "何か聞きたいことはありますか。"
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=reply_text)
         )
-        ai_reply = result.text or "回答を取得できませんでした。"
-    except Exception as e:
-        ai_reply = f"AI応答エラー: {str(e)}"
+        return
 
-    # 回数を減らす
-    state["count"] -= 1
 
-    # 回数終了
-    if state["count"] <= 0:
-        user_state.pop(user_id, None)
-        ai_reply += "\n\n🎉 相談回数が終了しました。また聞きたい場合は「AIに相談」と入力してください。"
+    # waiting_question
+    state = user_state.get(user_id)
+    if state and state.get("mode") == "waiting":
 
-    line_bot_api.reply_message(
-        event.reply_token,
-        TextSendMessage(text=ai_reply)
-    )
-    return
+        prompt = (
+            "あなたはLINEの使い方に限定して回答する AI です。\n"
+            "LINEに関係ない質問には次のように答えてください：\n"
+            "「このAIはLINEの使い方に関する質問のみ受け付けています。」\n\n"
+            f"ユーザーの質問: {text}"
+        )
+
+        try:
+            result = client.models.generate_content(
+                model=MODEL,
+                contents=[prompt]
+            )
+            ai_reply = result.text or "回答を取得できませんでした。"
+        except Exception as e:
+            ai_reply = f"AI応答エラー: {str(e)}"
+
+        # 回数を減らす
+        state["count"] -= 1
+
+        # 回数終了
+        if state["count"] <= 0:
+            user_state.pop(user_id, None)
+            ai_reply += "\n\n🎉 相談回数が終了しました。また聞きたい場合は「AIに相談」と入力してください。"
+
+        line_bot_api.reply_message(
+            event.reply_token,
+            TextSendMessage(text=ai_reply)
+        )
+        return
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
