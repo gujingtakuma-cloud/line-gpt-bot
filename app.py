@@ -63,7 +63,8 @@ def handle_message(event):
     # HELP
     if text == "AIに相談":
         user_state[user_id] = {"mode": "waiting", "count": 2}
-        reply_text = "何か聞きたいことはありますか。"
+        reply_text = "何か聞きたいことはありますか。\n"
+                    "キーボードから入力お願いします。\n"
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text=reply_text)
@@ -95,7 +96,7 @@ def handle_message(event):
         # 回数終了
         if state["count"] <= 0:
             user_state.pop(user_id, None)
-            ai_reply += "\n\n🎉 相談回数が終了しました。また聞きたい場合は「AIに相談」と入力してください。"
+            ai_reply += "\n\n 相談回数が終了しました。また聞きたい場合は「AIに相談」と入力してください。"
 
         line_bot_api.reply_message(
             event.reply_token,
