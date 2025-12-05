@@ -76,9 +76,7 @@ def handle_message(event):
     if state and state.get("mode") == "waiting":
 
         prompt = (
-            "あなたはLINEの使い方を回答する親切な AI です。\n"
-            "LINEや感謝に関係ない質問には次のように答えてください：\n"
-            "「このAIはLINEの使い方に関する質問のみ受け付けています。」\n\n"
+            "あなたはLINEの使い方を回答する親切な AI です。\n\n"
             f"ユーザーの質問: {text}"
         )
 
