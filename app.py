@@ -34,7 +34,26 @@ def callback():
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
-        abort(400)
+        abort(400,"Invalid signature")
+
+    try:
+        json_body=request.get_json()
+        events=json_body.get("events",[])
+
+    for ev in events:
+        ts_ms=ev.get("timestamp")
+        if ts_ms:
+            ts=int(ts_ms/1000)
+            now=int(time.time())
+            tolerance=60
+            if abs(now-ts)>tolerance:
+                print("Worning!: Webhook timestamp too old → reject")
+                abort(408,"Event timestamp expired")
+
+    except Exception as e:
+        print("Timestamp check failed:",e)
+        abort(400,"Bad request")
+
 
     return 'OK'
 
