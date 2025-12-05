@@ -63,8 +63,8 @@ def handle_message(event):
     # HELP
     if text == "AIに相談":
         user_state[user_id] = {"mode": "waiting", "count": 2}
-        reply_text = "何か聞きたいことはありますか。\n"
-                    "キーボードから入力お願いします。\n"
+        reply_text = "何か聞きたいことはありますか。\nキーボードから入力お願いします。\n"
+        
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text=reply_text)
