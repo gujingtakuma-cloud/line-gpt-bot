@@ -11,40 +11,6 @@ load_dotenv()
 
 app = Flask(__name__)
 
-SHARED_SECRET=b"MY_SHARED_SECRET"
-TOLERANCE_SEC=300
-def verify_signature(body:bytes,timestamp:str,signature:str) ->bool:
-    try:
-        ts=int(timestamp)
-        now=int(time.time())
-        if abs(now-ts) >TOLERANCE_SEC:
-            return False
-
-        signed_payload=f"{timestamp}.{body.decode('utf-8')}".encode("utf-8")
-        expected=hmac.new(SHARED_SECRET,signed_payload,hashlib.sha256).hexdigest()
-        expected_sig=f"sha256={expected}"
-
-        return hmac.compare_digest(expected_sig,signature)
-
-    except Exception:
-        return False
-
-@app.before_request
-def get_raw_body():
-    request.raw_body=request.get_data(cache=True)
-
-@app.route("/webhook",method=["POST"])
-def webhook():
-    signature=request.headers.get("X-Signature","")
-    timestamp=request.headers.get("X-Timestamp","")
-    body=request.raw_body
-
-    if not verify_signature(body,timestamp,signature):
-        abort(401,"Invalid signature or timestamp")
-    return "OK",200
-
-
-
 LINE_CHANNEL_SECRET = os.getenv("LINE_CHANNEL_SECRET")
 LINE_CHANNEL_ACCESS_TOKEN = os.getenv("LINE_CHANNEL_ACCESS_TOKEN")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
