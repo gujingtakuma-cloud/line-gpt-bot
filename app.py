@@ -8,13 +8,19 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from google import genai
 from dotenv import load_dotenv
 
+log_count = {
+    "AI_SUCCESS": 0,
+    "AI_ERROR": 0,
+    "INVALID_SIGNATURE": 0,
+    "NON_TEXT": 0,
+}
 
 logging.basicConfig(
     filename="logs/app.log",
     level=logging.INFO,
     format="%(asctime)s %(message)s"
 )
-logging.warning("INVALID_SIGNATURE")
+
 load_dotenv()
 app = Flask(__name__)
 
@@ -41,8 +47,10 @@ def callback():
     try:
         handler.handle(body, signature)
     except InvalidSignatureError:
-        abort(400,"Invalid signature")
+        log_count["INVALID_SIGNATURE"]+=1
         logging.warning("INVALID_SIGNATURE")
+        abort(400,"Invalid signature")
+       
 
     try:
         json_body=request.get_json()
@@ -60,9 +68,6 @@ def callback():
     except Exception as e:
         print("Timestamp check failed:",e)
         abort(400,"Bad request")
-        logging.error("AI_ERROR")
-
-
     return 'OK'
 
 
@@ -74,8 +79,10 @@ def handle_message(event):
     print("======================")
 
     if not isinstance(event.message, TextMessage):
-        print("Non-text message received")
+        log_count["NON_TEXT"]+=1
         logging.info("NON_TEXT")
+        print("Non-text message received")
+        
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text="テキストを送ってください。")
@@ -120,8 +127,11 @@ def handle_message(event):
                 contents=[prompt]
             )
             ai_reply = result.text or "回答を取得できませんでした。"
+            log_count["AI_SUCCESS"]+=1
+            logging.info("AI_SUCCESS")
         except Exception as e:
             ai_reply = f"AI応答エラー: {str(e)}"
+            log_count["AI_ERROR"]+=1
             logging.error("AI_ERROR")
 
         # 回数を減らす
@@ -131,7 +141,6 @@ def handle_message(event):
         if state["count"] <= 0:
             user_state.pop(user_id, None)
             ai_reply += "\n\n 相談回数が終了しました。また聞きたい場合は「AIに相談」と入力してください。"
-            logging.info("AI_SUCCESS")
             
         line_bot_api.reply_message(
             event.reply_token,
