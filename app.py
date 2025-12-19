@@ -15,6 +15,7 @@ log_count = {
     "NON_TEXT": 0,
 }
 
+os.makedirs("logs",exist_ok=True)
 logging.basicConfig(
     filename="logs/app.log",
     level=logging.INFO,
