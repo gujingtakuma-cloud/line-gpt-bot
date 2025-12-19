@@ -1,32 +1,30 @@
-from collections import Counter
 import matplotlib.pyplot as plt
-counts = Counter()
+from collections import Counter
 
-with open("logs/app.log", encoding="utf-8") as f:
+log_file = "logs/app.log"
+
+# カウント用
+counter = Counter()
+
+# ログを読む
+with open(log_file, "r", encoding="utf-8") as f:
     for line in f:
         if "AI_SUCCESS" in line:
-            counts["AI_SUCCESS"] += 1
+            counter["正常応答"] += 1
         elif "AI_ERROR" in line:
-            counts["AI_ERROR"] += 1
+            counter["AIエラー"] += 1
         elif "INVALID_SIGNATURE" in line:
-            counts["INVALID_SIGNATURE"] += 1
+            counter["不正署名"] += 1
         elif "NON_TEXT" in line:
-            counts["NON_TEXT"] += 1
-        elif "BLOCKED_QUESTION" in line:
-            counts["BLOCKED_QUESTION"] += 1
+            counter["非テキスト"] += 1
 
-print(counts)
+labels = list(counter.keys())
+values = list(counter.values())
 
-labels = ["正常応答", "AIエラー", "不正署名", "非テキスト", "ブロック"]
-values = [
-    counts["AI_SUCCESS"],
-    counts["AI_ERROR"],
-    counts["INVALID_SIGNATURE"],
-    counts["NON_TEXT"],
-    counts["BLOCKED_QUESTION"]
-]
-
+# 棒グラフ
 plt.bar(labels, values)
 plt.title("セキュリティ・安定性検証結果")
 plt.ylabel("発生回数")
+plt.xlabel("イベント種別")
+plt.tight_layout()
 plt.show()
