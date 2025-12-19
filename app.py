@@ -1,4 +1,5 @@
 import os
+import logging
 import time, hmac, hashlib
 from flask import Flask, request, abort
 from linebot import LineBotApi, WebhookHandler
@@ -7,8 +8,14 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from google import genai
 from dotenv import load_dotenv
 
-load_dotenv()
 
+logging.basicConfig(
+    filename="logs/app.log",
+    level=logging.INFO,
+    format="%(asctime)s %(message)s"
+)
+logging.warning("INVALID_SIGNATURE")
+load_dotenv()
 app = Flask(__name__)
 
 LINE_CHANNEL_SECRET = os.getenv("LINE_CHANNEL_SECRET")
@@ -35,6 +42,7 @@ def callback():
         handler.handle(body, signature)
     except InvalidSignatureError:
         abort(400,"Invalid signature")
+        logging.warning("INVALID_SIGNATURE")
 
     try:
         json_body=request.get_json()
@@ -52,6 +60,7 @@ def callback():
     except Exception as e:
         print("Timestamp check failed:",e)
         abort(400,"Bad request")
+        logging.error("AI_ERROR")
 
 
     return 'OK'
@@ -66,6 +75,7 @@ def handle_message(event):
 
     if not isinstance(event.message, TextMessage):
         print("Non-text message received")
+        logging.info("NON_TEXT")
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text="テキストを送ってください。")
@@ -112,6 +122,7 @@ def handle_message(event):
             ai_reply = result.text or "回答を取得できませんでした。"
         except Exception as e:
             ai_reply = f"AI応答エラー: {str(e)}"
+            logging.error("AI_ERROR")
 
         # 回数を減らす
         state["count"] -= 1
@@ -120,7 +131,8 @@ def handle_message(event):
         if state["count"] <= 0:
             user_state.pop(user_id, None)
             ai_reply += "\n\n 相談回数が終了しました。また聞きたい場合は「AIに相談」と入力してください。"
-
+            logging.info("AI_SUCCESS")
+            
         line_bot_api.reply_message(
             event.reply_token,
             TextSendMessage(text=ai_reply)
