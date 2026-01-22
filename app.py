@@ -124,9 +124,18 @@ def handle_message(event):
         )
         try:
              if text=="ネットショッピングをする":
-                 break:
+                 line_bot_api.reply_message(
+                     event.reply_token,
+                     TectSendMessage(text="システムを終了します。")
+                 )
+                 sys.exit()
              elif text=="LINEの機能についての質問":
-                 break:
+                 line_bot_api.reply_message(
+                     event.reply_token,
+                     TextSendMessage(text="システムを終了します。")
+                 )
+                 sys.exit()
+                 
             result = client.models.generate_content(
                 model=MODEL,
                 contents=[prompt]
