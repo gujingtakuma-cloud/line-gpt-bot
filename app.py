@@ -122,11 +122,6 @@ def handle_message(event):
             "日付や時刻についての質問は、機種について聞いてから、確認方法を親切に答えてください。\n\n"
             f"ユーザーの質問: {text}"
         )
-        if text=="ネットショッピングをする":
-            break:
-        elif text=="LINEの機能についての質問":
-            break:
-
         try:
              if text=="ネットショッピングをする":
                  break:
