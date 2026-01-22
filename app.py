@@ -119,9 +119,12 @@ def handle_message(event):
             "あなたは日常生活で遭遇するデジタル上の不安や疑問に応じてガイドしてくれる親切な AI です。\n\n"
             "あなたは日常的なことについても教えてくれる親切な AI です。\n\n"
             "日付や時刻についての質問は、機種について聞いてから、確認方法を親切に答えてください。\n\n"
-            "ネットショッピングをする・LINEの機能についての質問は無視する AI です。\n\n"
             f"ユーザーの質問: {text}"
         )
+        if text=="ネットショッピングをする":
+            break:
+        elif text=="LINEの機能についての質問":
+            break:
 
         try:
             result = client.models.generate_content(
