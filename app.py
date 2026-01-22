@@ -1,4 +1,5 @@
 import os
+import sys
 import logging
 import time, hmac, hashlib
 from flask import Flask, request, abort
@@ -127,6 +128,10 @@ def handle_message(event):
             break:
 
         try:
+             if text=="ネットショッピングをする":
+                 break:
+             elif text=="LINEの機能についての質問":
+                 break:
             result = client.models.generate_content(
                 model=MODEL,
                 contents=[prompt]
