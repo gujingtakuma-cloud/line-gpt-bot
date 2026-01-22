@@ -123,16 +123,10 @@ def handle_message(event):
             f"ユーザーの質問: {text}"
         )
         try:
-             if text=="ネットショッピングをする":
+             if text=="ネットショッピングをする" or text=="LINEの機能についての質問":
                  line_bot_api.reply_message(
                      event.reply_token,
                      TectSendMessage(text="システムを終了します。")
-                 )
-                 sys.exit()
-             elif text=="LINEの機能についての質問":
-                 line_bot_api.reply_message(
-                     event.reply_token,
-                     TextSendMessage(text="システムを終了します。")
                  )
                  sys.exit()
                  
