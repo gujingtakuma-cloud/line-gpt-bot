@@ -126,6 +126,7 @@ def handle_message(event):
             if text=="ネットショッピングをする" or text=="LINEの機能についての質問":
                 line_bot_api.reply_message(
                     event.reply_token
+                    TextSendMessage(text="")
                 )
                 user_state.pop(user_id)
                  
