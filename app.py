@@ -136,7 +136,7 @@ def handle_message(event):
             logging.error("AI_ERROR")
 
         # 回数を減らす
-        state["count"] -= 1
+        
 
         # 回数終了
         if state["count"] <= 0:
