@@ -124,12 +124,9 @@ def handle_message(event):
         )
         try:
             if text=="ネットショッピングをする" or text=="LINEの機能についての質問":
-                line_bot_api.reply_message(
-                    event.reply_token
-                    TextSendMessage(text="")
-                )
-                user_state.pop(user_id)
-                 
+                user_state.pop(user_id,None)
+                return
+                
             result = client.models.generate_content(
                 model=MODEL,
                 contents=[prompt]
